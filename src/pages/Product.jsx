@@ -7,6 +7,8 @@ import { addCart } from "../redux/action";
 
 import { Footer, Navbar } from "../components";
 
+const BASE_URL = process.env.REACT_APP_BASE_URL ;
+
 const Product = () => {
   const { id } = useParams();
   const [product, setProduct] = useState([]);
@@ -24,19 +26,34 @@ const Product = () => {
     const getProduct = async () => {
       setLoading(true);
       setLoading2(true);
-      const response = await fetch(`https://fakestoreapi.com/products/${id}`);
-      const data = await response.json();
-      setProduct(data);
-      setLoading(false);
-      const response2 = await fetch(
-        `https://fakestoreapi.com/products/category/${data.category}`
-      );
-      const data2 = await response2.json();
-      setSimilarProducts(data2);
-      setLoading2(false);
+      try {
+        // Fetching individual product
+        const response = await fetch(`${BASE_URL}/v1/products/${id}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch product');
+        }
+        const productData = await response.json();
+        setProduct(productData);
+        setLoading(false);
+  
+        // Fetching similar products
+        const response2 = await fetch(`${BASE_URL}/v1/products`);
+        if (!response2.ok) {
+          throw new Error('Failed to fetch similar products');
+        }
+        const similarProductsData = await response2.clone().json(); // Clone the response before reading JSON
+        setSimilarProducts(similarProductsData);
+        setLoading2(false);
+      } catch (error) {
+        console.error('Error fetching product data:', error);
+        setLoading(false);
+        setLoading2(false);
+      }
     };
+    
     getProduct();
   }, [id]);
+  
 
   const Loading = () => {
     return (
@@ -69,19 +86,19 @@ const Product = () => {
             <div className="col-md-6 col-sm-12 py-3">
               <img
                 className="img-fluid"
-                src={product.image}
-                alt={product.title}
+                src={product.imgUrl}
+                alt={product.productName}
                 width="400px"
                 height="400px"
               />
             </div>
             <div className="col-md-6 col-md-6 py-5">
-              <h4 className="text-uppercase text-muted">{product.category}</h4>
-              <h1 className="display-5">{product.title}</h1>
-              <p className="lead">
+              <h4 className="text-uppercase text-muted">{product.type}</h4>
+              <h1 className="display-5">{product.productName}</h1>
+              {/* <p className="lead">
                 {product.rating && product.rating.rate}{" "}
                 <i className="fa fa-star"></i>
-              </p>
+              </p> */}
               <h3 className="display-6  my-4">${product.price}</h3>
               <p className="lead">{product.description}</p>
               <button
@@ -128,19 +145,19 @@ const Product = () => {
       <>
         <div className="py-4 my-4">
           <div className="d-flex">
-            {similarProducts.map((item) => {
+            {similarProducts?.map((item) => {
               return (
                 <div key={item.id} className="card mx-4 text-center">
                   <img
                     className="card-img-top p-3"
-                    src={item.image}
+                    src={item.imgUrl}
                     alt="Card"
                     height={300}
-                    width={300}
+                    width={100}
                   />
                   <div className="card-body">
                     <h5 className="card-title">
-                      {item.title.substring(0, 15)}...
+                      {item.productName}...
                     </h5>
                   </div>
                   {/* <ul className="list-group list-group-flush">

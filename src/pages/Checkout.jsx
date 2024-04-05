@@ -1,7 +1,23 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Footer, Navbar } from "../components";
 import { useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useFormik, Field } from "formik";
+import Select from "react-select";
+import InvoicePage from "./InvoicePage";
+const BASE_URL = process.env.REACT_APP_BASE_URL;
+const componentMounted = true;
+const options = [
+  { value: "INDIA", label: "INDIA" },
+  { value: "MOROCCO", label: "MOROCCO" },
+  { value: "USA", label: "USA" },
+];
+const options2 = [
+  { value: "Punjab", label: "Punjab" },
+  { value: "California", label: "California" },
+  { value: "cali", label: "cali" },
+];
+
 const Checkout = () => {
   const state = useSelector((state) => state.handleCart);
 
@@ -20,179 +36,252 @@ const Checkout = () => {
     );
   };
 
-  const ShowCheckout = () => {
-    let subtotal = 0;
-    let shipping = 30.0;
-    let totalItems = 0;
-    state.map((item) => {
-      return (subtotal += item.price * item.qty);
-    });
+  const SignupForm = (props) => {
+    const [selectedOption, setSelectedOption] = useState("test");
+    const handleChange = (selectedOption) => {
+      if (selectedOption) {
+        console.log(selectedOption.value); // Accessing the value property of the selected option
+      } else {
+        console.log("No option selected");
+      }
+      // You can also update Formik's state here if needed
+      // formik.setFieldValue("country", selectedOption ? selectedOption.value : "");
+    };
+    const navigate = useNavigate();
 
-    state.map((item) => {
-      return (totalItems += item.qty);
+    const navigateToInvoice = (id) => {
+      navigate(`/invoice/${id}`);
+    };
+    const postProduct = async (productData) => {
+      try {
+        const response = await fetch(`${BASE_URL}/v1/invoices/create`, {
+          method: "POST", // Specify the method
+          headers: {
+            "Content-Type": "application/json", // Set the content type header so that the server knows we're sending JSON
+          },
+          body: JSON.stringify(productData), // Convert the JavaScript object to a string
+        });
+
+        // Check if the component is still mounted before updating its state
+        if (componentMounted) {
+          if (response.ok) {
+            const result = await response.json();
+
+            props.setInvoice(result);
+            console.log(result, props); // Assuming you want to do something with the result
+          } else {
+            throw new Error("Something went wrong with the POST request");
+          }
+        }
+      } catch (error) {
+        console.error("Failed to post product:", error);
+        // Handle error scenario, maybe set an error state here
+      } finally {
+      }
+    };
+    const getOrderList = (productsArray) => {
+      return productsArray.map((product) => ({
+        productId: product.id,
+        quantity: product.qty,
+      }));
+    };
+    useEffect(() => {
+      console.log(getOrderList(state));
+    }, []);
+    const formik = useFormik({
+      initialValues: {
+        firstName: "",
+        lastName: "",
+        email: "",
+        address: "",
+        address2: "",
+        country: "",
+        state: "",
+        zip: "",
+      },
+      onSubmit: (values) => {
+        postProduct({
+          customerRequest: formik.values,
+          orderList: getOrderList(state),
+        });
+      },
     });
     return (
-      <>
-        <div className="container py-5">
-          <div className="row my-4">
-            <div className="col-md-5 col-lg-4 order-md-last">
-              <div className="card mb-4">
-                <div className="card-header py-3 bg-light">
-                  <h5 className="mb-0">Order Summary</h5>
+      <div className="col-md-7 col-lg-8">
+        <div className="card mb-4">
+          <div className="card-header py-3">
+            <h4 className="mb-0">Billing address</h4>
+          </div>
+          <div className="card-body">
+            <form
+              onSubmit={formik.handleSubmit}
+              className="needs-validation"
+              novalidate
+            >
+              <div className="row g-3">
+                <div className="col-sm-6 my-1">
+                  <label for="firstName" className="form-label">
+                    First name
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="firstName"
+                    placeholder=""
+                    name="firstName"
+                    onChange={formik.handleChange}
+                    value={formik.values.firstName}
+                    required
+                  />
+                  <div className="invalid-feedback">
+                    Valid first name is required.
+                  </div>
                 </div>
-                <div className="card-body">
-                  <ul className="list-group list-group-flush">
-                    <li className="list-group-item d-flex justify-content-between align-items-center border-0 px-0 pb-0">
-                      Products ({totalItems})<span>${Math.round(subtotal)}</span>
-                    </li>
-                    <li className="list-group-item d-flex justify-content-between align-items-center px-0">
-                      Shipping
-                      <span>${shipping}</span>
-                    </li>
-                    <li className="list-group-item d-flex justify-content-between align-items-center border-0 px-0 mb-3">
-                      <div>
-                        <strong>Total amount</strong>
-                      </div>
-                      <span>
-                        <strong>${Math.round(subtotal + shipping)}</strong>
-                      </span>
-                    </li>
-                  </ul>
+
+                <div className="col-sm-6 my-1">
+                  <label for="lastName" className="form-label">
+                    Last name
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="lastName"
+                    placeholder=""
+                    name="lastName"
+                    onChange={formik.handleChange}
+                    value={formik.values.lastName}
+                    required
+                  />
+                  <div className="invalid-feedback">
+                    Valid last name is required.
+                  </div>
                 </div>
-              </div>
-            </div>
-            <div className="col-md-7 col-lg-8">
-              <div className="card mb-4">
-                <div className="card-header py-3">
-                  <h4 className="mb-0">Billing address</h4>
+
+                <div className="col-12 my-1">
+                  <label for="email" className="form-label">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    className="form-control"
+                    id="email"
+                    placeholder="you@example.com"
+                    name="email"
+                    onChange={formik.handleChange}
+                    value={formik.values.email}
+                    required
+                  />
+                  <div className="invalid-feedback">
+                    Please enter a valid email address for shipping updates.
+                  </div>
                 </div>
-                <div className="card-body">
-                  <form className="needs-validation" novalidate>
-                    <div className="row g-3">
-                      <div className="col-sm-6 my-1">
-                        <label for="firstName" className="form-label">
-                          First name
-                        </label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          id="firstName"
-                          placeholder=""
-                          required
-                        />
-                        <div className="invalid-feedback">
-                          Valid first name is required.
-                        </div>
-                      </div>
 
-                      <div className="col-sm-6 my-1">
-                        <label for="lastName" className="form-label">
-                          Last name
-                        </label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          id="lastName"
-                          placeholder=""
-                          required
-                        />
-                        <div className="invalid-feedback">
-                          Valid last name is required.
-                        </div>
-                      </div>
+                <div className="col-12 my-1">
+                  <label for="address" className="form-label">
+                    Address
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="address"
+                    placeholder="1234 Main St"
+                    name="address"
+                    onChange={formik.handleChange}
+                    value={formik.values.address}
+                    required
+                  />
+                  <div className="invalid-feedback">
+                    Please enter your shipping address.
+                  </div>
+                </div>
 
-                      <div className="col-12 my-1">
-                        <label for="email" className="form-label">
-                          Email
-                        </label>
-                        <input
-                          type="email"
-                          className="form-control"
-                          id="email"
-                          placeholder="you@example.com"
-                          required
-                        />
-                        <div className="invalid-feedback">
-                          Please enter a valid email address for shipping
-                          updates.
-                        </div>
-                      </div>
+                <div className="col-12">
+                  <label for="address2" className="form-label">
+                    Address 2 <span className="text-muted">(Optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="address2"
+                    placeholder="Apartment or suite"
+                    name="address2"
+                    onChange={formik.handleChange}
+                    value={formik.values.address2}
+                  />
+                </div>
 
-                      <div className="col-12 my-1">
-                        <label for="address" className="form-label">
-                          Address
-                        </label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          id="address"
-                          placeholder="1234 Main St"
-                          required
-                        />
-                        <div className="invalid-feedback">
-                          Please enter your shipping address.
-                        </div>
-                      </div>
+                <div className="col-md-5 my-1">
+                  <label for="country" className="form-label">
+                    Country
+                  </label>
+                  <br />
 
-                      <div className="col-12">
-                        <label for="address2" className="form-label">
-                          Address 2{" "}
-                          <span className="text-muted">(Optional)</span>
-                        </label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          id="address2"
-                          placeholder="Apartment or suite"
-                        />
-                      </div>
+                  <Select
+                    onChange={(e) => {
+                      formik.setFieldValue("country", e ? e.value : null);
+                    }}
+                    options={options}
+                    isClearable={true}
+                    value={options.find(
+                      (option) => option.value === formik.values.country
+                    )}
+                    required
+                  />
+                  <div className="invalid-feedback">
+                    Please select a valid country.
+                  </div>
+                </div>
 
-                      <div className="col-md-5 my-1">
-                        <label for="country" className="form-label">
-                          Country
-                        </label>
-                        <br />
-                        <select className="form-select" id="country" required>
-                          <option value="">Choose...</option>
-                          <option>India</option>
-                        </select>
-                        <div className="invalid-feedback">
-                          Please select a valid country.
-                        </div>
-                      </div>
-
-                      <div className="col-md-4 my-1">
-                        <label for="state" className="form-label">
-                          State
-                        </label>
-                        <br />
-                        <select className="form-select" id="state" required>
+                <div className="col-md-4 my-1">
+                  <label for="state" className="form-label">
+                    State
+                  </label>
+                  <br />
+                  {/* <Field 
+                        className="form-select" 
+                        id="state" 
+                        name="state" 
+                        onChange={formik.handleChange}
+                        value={formik.values.state}
+                        required>
                           <option value="">Choose...</option>
                           <option>Punjab</option>
-                        </select>
-                        <div className="invalid-feedback">
-                          Please provide a valid state.
-                        </div>
-                      </div>
+                        </Field> */}
+                  <Select
+                    onChange={(e) => {
+                      formik.setFieldValue("state", e ? e.value : null);
+                    }}
+                    options={options2}
+                    isClearable={true}
+                    value={options.find(
+                      (option) => option.value === formik.values.state
+                    )}
+                    required
+                  />
+                  <div className="invalid-feedback">
+                    Please provide a valid state.
+                  </div>
+                </div>
 
-                      <div className="col-md-3 my-1">
-                        <label for="zip" className="form-label">
-                          Zip
-                        </label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          id="zip"
-                          placeholder=""
-                          required
-                        />
-                        <div className="invalid-feedback">
-                          Zip code required.
-                        </div>
-                      </div>
-                    </div>
+                <div className="col-md-3 my-1">
+                  <label for="zip" className="form-label">
+                    Zip
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="zip"
+                    placeholder=""
+                    name="zip"
+                    onChange={formik.handleChange}
+                    value={formik.values.zip}
+                    required
+                  />
+                  <div className="invalid-feedback">Zip code required.</div>
+                </div>
+              </div>
 
-                    <hr className="my-4" />
+              {/* <hr className="my-4" />
 
                     <h4 className="mb-3">Payment</h4>
 
@@ -263,22 +352,74 @@ const Checkout = () => {
                           Security code required
                         </div>
                       </div>
-                    </div>
+                    </div> */}
 
-                    <hr className="my-4" />
+              <hr className="my-4" />
 
-                    <button
-                      className="w-100 btn btn-primary "
-                      type="submit" disabled
-                    >
-                      Continue to checkout
-                    </button>
-                  </form>
-                </div>
-              </div>
-            </div>
+              <button className="w-100 btn btn-primary " type="submit">
+                Continue to checkout
+              </button>
+            </form>
           </div>
         </div>
+      </div>
+    );
+  };
+
+  const ShowCheckout = () => {
+    const [invoice, setInvoice] = useState(null);
+    let subtotal = 0;
+    let shipping = 30.0;
+    let totalItems = 0;
+    console.log(state);
+    state?.map((item) => {
+      return (subtotal += item.price * item.qty);
+    });
+
+    state?.map((item) => {
+      return (totalItems += item.qty);
+    });
+
+    return (
+      <>
+        {!!invoice === false ? (
+          <div className="container py-5">
+            <div className="row my-4">
+              <div className="col-md-5 col-lg-4 order-md-last">
+                <div className="card mb-4">
+                  <div className="card-header py-3 bg-light">
+                    <h5 className="mb-0">Order Summary</h5>
+                  </div>
+                  <div className="card-body">
+                    <ul className="list-group list-group-flush">
+                      <li className="list-group-item d-flex justify-content-between align-items-center border-0 px-0 pb-0">
+                        Products ({totalItems})
+                        <span>${Math.round(subtotal)}</span>
+                      </li>
+                      <li className="list-group-item d-flex justify-content-between align-items-center px-0">
+                        Shipping
+                        <span>${shipping}</span>
+                      </li>
+                      <li className="list-group-item d-flex justify-content-between align-items-center border-0 px-0 mb-3">
+                        <div>
+                          <strong>Total amount</strong>
+                        </div>
+                        <span>
+                          <strong>${Math.round(subtotal + shipping)}</strong>
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <SignupForm setInvoice={setInvoice} />
+            </div>
+          </div>
+        ) : (
+          ""
+        )}
+        {!!invoice === true ? <InvoicePage /> : ""}
       </>
     );
   };

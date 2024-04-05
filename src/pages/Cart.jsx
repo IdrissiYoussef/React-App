@@ -62,7 +62,7 @@ const Cart = () => {
                                 data-mdb-ripple-color="light"
                               >
                                 <img
-                                  src={item.image}
+                                  src={item.imgUrl}
                                   // className="w-100"
                                   alt={item.title}
                                   width={100}
