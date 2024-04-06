@@ -13,3 +13,9 @@ export const delCart = (product) =>{
         payload:product
     }
 }
+export const Clear = () =>{
+    return {
+        type:"CLEAR",
+        
+    }
+}

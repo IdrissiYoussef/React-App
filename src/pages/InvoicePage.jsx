@@ -1,6 +1,19 @@
 import React from "react";
-import { Footer, Navbar } from "../components";
-const InvoicePage = () => {
+import { Footer, Navbar, Product } from "../components";
+import { Link } from "react-router-dom";
+const InvoicePage = (props) => {
+  const getCurrentDate = () => {
+    const date = new Date();
+    const formattedDate = `${date.getDate()} ${getMonthName(date.getMonth())}, ${date.getFullYear()}`;
+    return formattedDate;
+  };
+  
+  const getMonthName = (monthIndex) => {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return months[monthIndex];
+  };
+  const customer = props.invoice.customer;
+  console.log(props);
   return (
     <>
       <>
@@ -17,15 +30,15 @@ const InvoicePage = () => {
                 <div className="card-body">
                   <div className="invoice-title">
                     <h4 className="float-end font-size-15">
-                      Invoice #DS0204{" "}
+                      Invoice #{props?.invoice.id}{" "}
                       <span className="badge bg-success font-size-12 ms-2">
                         Paid
                       </span>
                     </h4>
                     <div className="mb-4">
-                      <h2 className="mb-1 text-muted">Bootdey.com</h2>
+                      <h2 className="mb-1 text-muted">TechStore</h2>
                     </div>
-                    <div className="text-muted">
+                    {/* <div className="text-muted">
                       <p className="mb-1">
                         3184 Spruce Drive Pittsburgh, PA 15201
                       </p>
@@ -35,19 +48,19 @@ const InvoicePage = () => {
                       <p>
                         <i className="uil uil-phone me-1" /> 012-345-6789
                       </p>
-                    </div>
+                    </div> */}
                   </div>
                   <hr className="my-4" />
                   <div className="row">
                     <div className="col-sm-6">
                       <div className="text-muted">
                         <h5 className="font-size-16 mb-3">Billed To:</h5>
-                        <h5 className="font-size-15 mb-2">Preston Miller</h5>
+                        <h5 className="font-size-15 mb-2">{customer.firstName} {customer.lastName}</h5>
                         <p className="mb-1">
-                          4068 Post Avenue Newfolden, MN 56738
+                        {customer.address}, {customer.city}
                         </p>
-                        <p className="mb-1">PrestonMiller@armyspy.com</p>
-                        <p>001-234-5678</p>
+                        
+                        <p>{customer.phoneNumber}</p>
                       </div>
                     </div>
                     {/* end col */}
@@ -55,16 +68,21 @@ const InvoicePage = () => {
                       <div className="text-muted text-sm-end">
                         <div>
                           <h5 className="font-size-15 mb-1">Invoice No:</h5>
-                          <p>#DZ0112</p>
+                          <p>#{props?.invoice.id}</p>
                         </div>
                         <div className="mt-4">
                           <h5 className="font-size-15 mb-1">Invoice Date:</h5>
-                          <p>12 Oct, 2020</p>
+                          <p>{getCurrentDate()}</p>
                         </div>
-                        <div className="mt-4">
+                        {props.invoice.orderList.map((Product)=>{
+                            return(
+                              <div className="mt-4">
                           <h5 className="font-size-15 mb-1">Order No:</h5>
-                          <p>#1123456</p>
+                          <p>#{Product.id}</p>
                         </div>
+                              )
+                            })}
+                        
                       </div>
                     </div>
                     {/* end col */}
@@ -87,76 +105,27 @@ const InvoicePage = () => {
                         </thead>
                         {/* end thead */}
                         <tbody>
-                          <tr>
-                            <th scope="row">01</th>
+                          {props.invoice.orderList.map((Product)=>{
+                            return(
+                              <tr>
+                            <th scope="row">{Product.id}</th>
                             <td>
                               <div>
                                 <h5 className="text-truncate font-size-14 mb-1">
-                                  Black Strap A012
+                                  {Product.product.productName}
                                 </h5>
-                                <p className="text-muted mb-0">Watch, Black</p>
+                                <p className="text-muted mb-0">{Product.product.description}</p>
                               </div>
                             </td>
-                            <td>$ 245.50</td>
-                            <td>1</td>
-                            <td className="text-end">$ 245.50</td>
+                            <td>${Product.product.price}</td>
+                            <td>{Product.quantity}</td>
+                            <td className="text-end">${Product.total}</td>
                           </tr>
-                          {/* end tr */}
-                          <tr>
-                            <th scope="row">02</th>
-                            <td>
-                              <div>
-                                <h5 className="text-truncate font-size-14 mb-1">
-                                  Stainless Steel S010
-                                </h5>
-                                <p className="text-muted mb-0">Watch, Gold</p>
-                              </div>
-                            </td>
-                            <td>$ 245.50</td>
-                            <td>2</td>
-                            <td className="text-end">$491.00</td>
-                          </tr>
-                          {/* end tr */}
-                          <tr>
-                            <th scope="row" colSpan={4} className="text-end">
-                              Sub Total
-                            </th>
-                            <td className="text-end">$732.50</td>
-                          </tr>
-                          {/* end tr */}
-                          <tr>
-                            <th
-                              scope="row"
-                              colSpan={4}
-                              className="border-0 text-end"
-                            >
-                              Discount :
-                            </th>
-                            <td className="border-0 text-end">- $25.50</td>
-                          </tr>
-                          {/* end tr */}
-                          <tr>
-                            <th
-                              scope="row"
-                              colSpan={4}
-                              className="border-0 text-end"
-                            >
-                              Shipping Charge :
-                            </th>
-                            <td className="border-0 text-end">$20.00</td>
-                          </tr>
-                          {/* end tr */}
-                          <tr>
-                            <th
-                              scope="row"
-                              colSpan={4}
-                              className="border-0 text-end"
-                            >
-                              Tax
-                            </th>
-                            <td className="border-0 text-end">$12.00</td>
-                          </tr>
-                          {/* end tr */}
+
+                            )
+                          })}
+                          
+                          
                           <tr>
                             <th
                               scope="row"
@@ -166,7 +135,7 @@ const InvoicePage = () => {
                               Total
                             </th>
                             <td className="border-0 text-end">
-                              <h4 className="m-0 fw-semibold">$739.00</h4>
+                              <h4 className="m-0 fw-semibold">${props.invoice.total}</h4>
                             </td>
                           </tr>
                           {/* end tr */}
@@ -184,9 +153,9 @@ const InvoicePage = () => {
                         >
                           <i className="fa fa-print" />
                         </a>
-                        <a href="#" className="btn btn-primary w-md">
-                          Send
-                        </a>
+                        <Link to="/" className="btn btn-primary w-md">
+                          Done
+                        </Link>
                       </div>
                     </div>
                   </div>

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Footer, Navbar } from "../components";
-import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { useFormik, Field } from "formik";
 import Select from "react-select";
 import InvoicePage from "./InvoicePage";
+import { useSelector, useDispatch } from "react-redux";
+import { CLEAR, Clear, delCart } from "../redux/action";
 const BASE_URL = process.env.REACT_APP_BASE_URL;
 const componentMounted = true;
 const options = [
@@ -52,6 +53,8 @@ const Checkout = () => {
     const navigateToInvoice = (id) => {
       navigate(`/invoice/${id}`);
     };
+    const state = useSelector((state) => state.handleCart);
+    const dispatch = useDispatch();
     const postProduct = async (productData) => {
       try {
         const response = await fetch(`${BASE_URL}/v1/invoices/create`, {
@@ -66,9 +69,14 @@ const Checkout = () => {
         if (componentMounted) {
           if (response.ok) {
             const result = await response.json();
-
+            console.log(result, props, state);
             props.setInvoice(result);
-            console.log(result, props); // Assuming you want to do something with the result
+            
+            dispatch(Clear())
+            // state.map((item)=>{
+            //   console.log(item)
+            //   
+            // })
           } else {
             throw new Error("Something went wrong with the POST request");
           }
@@ -92,11 +100,11 @@ const Checkout = () => {
       initialValues: {
         firstName: "",
         lastName: "",
-        email: "",
+        phoneNumber: "",
         address: "",
         address2: "",
         country: "",
-        state: "",
+        city: "",
         zip: "",
       },
       onSubmit: (values) => {
@@ -157,24 +165,7 @@ const Checkout = () => {
                   </div>
                 </div>
 
-                <div className="col-12 my-1">
-                  <label for="email" className="form-label">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    className="form-control"
-                    id="email"
-                    placeholder="you@example.com"
-                    name="email"
-                    onChange={formik.handleChange}
-                    value={formik.values.email}
-                    required
-                  />
-                  <div className="invalid-feedback">
-                    Please enter a valid email address for shipping updates.
-                  </div>
-                </div>
+                
 
                 <div className="col-12 my-1">
                   <label for="address" className="form-label">
@@ -210,7 +201,28 @@ const Checkout = () => {
                   />
                 </div>
 
-                <div className="col-md-5 my-1">
+                <div className="col-12 my-1">
+                  <label for="phoneNumber" className="form-label">
+                  phoneNumber
+                  </label>
+                  <input
+                    type="tel"
+                    pattern="[0-9]{2}[0-9]{2}[0-9]{2}[0-9]{2}[0-9]{2}"
+                    title="Please enter a valid phone number in the format 06-XX-XX-XX-XX"
+                    className="form-control"
+                    id="phoneNumber"
+                    placeholder="06-XX-XX-XX-XX"
+                    name="phoneNumber"
+                    onChange={formik.handleChange}
+                    value={formik.values.phoneNumber}
+                    required
+                  />
+                  <div className="invalid-feedback">
+                    Please enter a valid phoneNumber for shipping updates.
+                  </div>
+                </div>
+
+                {/* <div className="col-md-5 my-1">
                   <label for="country" className="form-label">
                     Country
                   </label>
@@ -230,24 +242,23 @@ const Checkout = () => {
                   <div className="invalid-feedback">
                     Please select a valid country.
                   </div>
-                </div>
+                </div> */}
 
-                <div className="col-md-4 my-1">
-                  <label for="state" className="form-label">
-                    State
+                <div className="col-12 my-1">
+                  <label for="City" className="form-label">
+                    City
                   </label>
                   <br />
-                  {/* <Field 
-                        className="form-select" 
-                        id="state" 
-                        name="state" 
+                  <input 
+                        className="form-control" 
+                        id="city" 
+                        name="city" 
                         onChange={formik.handleChange}
-                        value={formik.values.state}
-                        required>
-                          <option value="">Choose...</option>
-                          <option>Punjab</option>
-                        </Field> */}
-                  <Select
+                        value={formik.values.city}
+                        required
+                
+                        />
+                  {/* <Select
                     onChange={(e) => {
                       formik.setFieldValue("state", e ? e.value : null);
                     }}
@@ -257,13 +268,13 @@ const Checkout = () => {
                       (option) => option.value === formik.values.state
                     )}
                     required
-                  />
+                  /> */}
                   <div className="invalid-feedback">
-                    Please provide a valid state.
+                    Please provide a valid city.
                   </div>
                 </div>
 
-                <div className="col-md-3 my-1">
+                {/* <div className="col-md-3 my-1">
                   <label for="zip" className="form-label">
                     Zip
                   </label>
@@ -278,7 +289,7 @@ const Checkout = () => {
                     required
                   />
                   <div className="invalid-feedback">Zip code required.</div>
-                </div>
+                </div> */}
               </div>
 
               {/* <hr className="my-4" />
@@ -365,9 +376,9 @@ const Checkout = () => {
       </div>
     );
   };
-
+  const [invoice, setInvoice] = useState(null);
   const ShowCheckout = () => {
-    const [invoice, setInvoice] = useState(null);
+    
     let subtotal = 0;
     let shipping = 30.0;
     let totalItems = 0;
@@ -419,7 +430,7 @@ const Checkout = () => {
         ) : (
           ""
         )}
-        {!!invoice === true ? <InvoicePage /> : ""}
+        {!!invoice === true ? <InvoicePage invoice={invoice} /> : ""}
       </>
     );
   };
@@ -429,7 +440,7 @@ const Checkout = () => {
       <div className="container my-3 py-3">
         <h1 className="text-center">Checkout</h1>
         <hr />
-        {state.length ? <ShowCheckout /> : <EmptyCart />}
+        {state.length || !!invoice === true? <ShowCheckout /> : <EmptyCart />}
       </div>
       <Footer />
     </>
